@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
+
 import {
   LayoutDashboard,
   Target,
@@ -13,195 +14,342 @@ import {
   TrendingUp,
   Plus,
   Circle,
+  Droplets,
+  BookOpen,
+  Dumbbell,
+  Moon,
+  Sun,
+  Menu,
+  X,
 } from "lucide-react";
 
 import "./App.css";
 
+
+const initialHabits = [
+  {
+    id: 1,
+    name: "Wake Up Early",
+    icon: Sun,
+    time: "7:00 AM",
+    category: "Morning",
+    days: [true, true, true, false, true, true, true],
+  },
+
+  {
+    id: 2,
+    name: "Meditate",
+    icon: Moon,
+    time: "10 min",
+    category: "Mind",
+    days: [true, true, false, true, true, false, true],
+  },
+
+  {
+    id: 3,
+    name: "Exercise",
+    icon: Dumbbell,
+    time: "45 min",
+    category: "Health",
+    days: [true, true, true, true, false, true, true],
+  },
+
+  {
+    id: 4,
+    name: "Drink Water",
+    icon: Droplets,
+    time: "2.5 L",
+    category: "Health",
+    days: [true, true, true, true, true, true, false],
+  },
+
+  {
+    id: 5,
+    name: "Read Book",
+    icon: BookOpen,
+    time: "30 min",
+    category: "Mind",
+    days: [true, false, true, true, true, false, true],
+  },
+];
+
+
+const weekDays = [
+  "M",
+  "T",
+  "W",
+  "T",
+  "F",
+  "S",
+  "S",
+];
+
+
 function App() {
-  const [activePage, setActivePage] = useState("Dashboard");
 
-  const [habits, setHabits] = useState([
-    {
-      id: 1,
-      name: "Exercise",
-      icon: "🏃",
-      color: "green",
-      days: [true, true, true, false, true, true, true],
-    },
-    {
-      id: 2,
-      name: "Reading",
-      icon: "📚",
-      color: "purple",
-      days: [true, true, false, true, true, false, true],
-    },
-    {
-      id: 3,
-      name: "Study",
-      icon: "💻",
-      color: "blue",
-      days: [true, true, true, true, false, true, true],
-    },
-    {
-      id: 4,
-      name: "Meditation",
-      icon: "🧘",
-      color: "orange",
-      days: [false, true, true, true, true, false, true],
-    },
-    {
-      id: 5,
-      name: "Water",
-      icon: "💧",
-      color: "cyan",
-      days: [true, true, true, true, true, true, false],
-    },
-  ]);
+  const [activePage, setActivePage] =
+    useState("Dashboard");
 
-  const toggleHabit = (habitId, dayIndex) => {
-    setHabits((currentHabits) =>
-      currentHabits.map((habit) => {
+  const [habits, setHabits] =
+    useState(initialHabits);
+
+  const [mobileMenu, setMobileMenu] =
+    useState(false);
+
+
+  /* =========================
+     TOGGLE HABIT
+  ========================= */
+
+  const toggleHabit = (
+    habitId,
+    dayIndex
+  ) => {
+
+    setHabits((current) =>
+
+      current.map((habit) => {
+
         if (habit.id !== habitId) {
           return habit;
         }
 
-        const updatedDays = [...habit.days];
+        const updatedDays =
+          [...habit.days];
 
-        updatedDays[dayIndex] = !updatedDays[dayIndex];
+        updatedDays[dayIndex] =
+          !updatedDays[dayIndex];
 
         return {
           ...habit,
           days: updatedDays,
         };
+
       })
+
     );
   };
 
-  const totalCompleted = habits.reduce(
-    (total, habit) =>
-      total +
-      habit.days.filter(Boolean).length,
-    0
-  );
 
-  const totalPossible = habits.length * 7;
+  /* =========================
+     CALCULATIONS
+  ========================= */
 
-  const completionPercentage = Math.round(
-    (totalCompleted / totalPossible) * 100
-  );
+  const totalCompleted =
+    habits.reduce(
+      (total, habit) =>
+        total +
+        habit.days.filter(Boolean).length,
+      0
+    );
+
+
+  const totalPossible =
+    habits.length * 7;
+
+
+  const completionPercentage =
+    totalPossible === 0
+      ? 0
+      : Math.round(
+          (totalCompleted /
+            totalPossible) *
+            100
+        );
+
+
+  const todayCompleted =
+    habits.filter(
+      (habit) =>
+        habit.days[6]
+    ).length;
+
+
+  const currentStreak = 12;
+
+  const bestStreak = 21;
+
+
+  /* =========================
+     WEEKLY ACTIVITY
+  ========================= */
+
+  const weeklyActivity =
+    useMemo(() => {
+
+      return weekDays.map(
+        (_, index) =>
+
+          habits.reduce(
+            (total, habit) =>
+              total +
+              (habit.days[index]
+                ? 1
+                : 0),
+            0
+          )
+      );
+
+    }, [habits]);
+
+
+  /* =========================
+     NAVIGATION
+  ========================= */
+
+  const navigation = [
+    {
+      name: "Dashboard",
+      icon: LayoutDashboard,
+    },
+
+    {
+      name: "Habits",
+      icon: Target,
+    },
+
+    {
+      name: "Calendar",
+      icon: CalendarDays,
+    },
+
+    {
+      name: "Analytics",
+      icon: BarChart3,
+    },
+
+    {
+      name: "Settings",
+      icon: Settings,
+    },
+  ];
+
 
   return (
+
     <div className="app-container">
 
-      {/* SIDEBAR */}
 
-      <aside className="sidebar">
+      {/* MOBILE OVERLAY */}
+
+      {mobileMenu && (
+
+        <div
+          className="mobile-overlay"
+          onClick={() =>
+            setMobileMenu(false)
+          }
+        />
+
+      )}
+
+
+      {/* =========================
+          SIDEBAR
+      ========================= */}
+
+      <aside
+        className={`sidebar ${
+          mobileMenu
+            ? "sidebar-open"
+            : ""
+        }`}
+      >
 
         <div className="brand">
-          <div className="brand-icon">
+
+          <div className="brand-logo">
             ✓
           </div>
 
-          <div>
-            <h2>DailyRoutine</h2>
-            <span>Habit Tracker</span>
+          <div className="brand-text">
+
+            <h2>
+              DailyRoutine
+            </h2>
+
+            <span>
+              HABIT TRACKER
+            </span>
+
           </div>
+
+
+          <button
+            className="close-menu"
+            onClick={() =>
+              setMobileMenu(false)
+            }
+          >
+            <X size={19} />
+          </button>
+
         </div>
 
-        <nav className="sidebar-menu">
 
-          <button
-            className={
-              activePage === "Dashboard"
-                ? "menu-item active"
-                : "menu-item"
-            }
-            onClick={() =>
-              setActivePage("Dashboard")
-            }
-          >
-            <LayoutDashboard size={19} />
-            Dashboard
-          </button>
+        <nav className="sidebar-navigation">
 
-          <button
-            className={
-              activePage === "Habits"
-                ? "menu-item active"
-                : "menu-item"
-            }
-            onClick={() =>
-              setActivePage("Habits")
-            }
-          >
-            <Target size={19} />
-            Habits
-          </button>
+          {navigation.map(
+            (item) => {
 
-          <button
-            className={
-              activePage === "Calendar"
-                ? "menu-item active"
-                : "menu-item"
-            }
-            onClick={() =>
-              setActivePage("Calendar")
-            }
-          >
-            <CalendarDays size={19} />
-            Calendar
-          </button>
+              const Icon =
+                item.icon;
 
-          <button
-            className={
-              activePage === "Analytics"
-                ? "menu-item active"
-                : "menu-item"
-            }
-            onClick={() =>
-              setActivePage("Analytics")
-            }
-          >
-            <BarChart3 size={19} />
-            Analytics
-          </button>
+              return (
 
-          <button
-            className={
-              activePage === "Settings"
-                ? "menu-item active"
-                : "menu-item"
+                <button
+                  key={item.name}
+                  className={`nav-item ${
+                    activePage ===
+                    item.name
+                      ? "active"
+                      : ""
+                  }`}
+                  onClick={() => {
+
+                    setActivePage(
+                      item.name
+                    );
+
+                    setMobileMenu(
+                      false
+                    );
+
+                  }}
+                >
+
+                  <Icon size={18} />
+
+                  <span>
+                    {item.name}
+                  </span>
+
+                </button>
+
+              );
+
             }
-            onClick={() =>
-              setActivePage("Settings")
-            }
-          >
-            <Settings size={19} />
-            Settings
-          </button>
+          )}
 
         </nav>
 
+
         <div className="sidebar-bottom">
 
-          <div className="mini-streak">
-            <Flame size={20} />
+          <div className="streak-box">
+
+            <Flame size={17} />
 
             <div>
-              <strong>7 Day Streak</strong>
-              <span>Keep it going!</span>
-            </div>
-          </div>
 
-          <div className="user-profile">
+              <strong>
+                {currentStreak} DAY STREAK
+              </strong>
 
-            <div className="user-avatar">
-              B
-            </div>
+              <span>
+                Keep going!
+              </span>
 
-            <div>
-              <strong>Bhagyalakshmi</strong>
-              <span>Student</span>
             </div>
 
           </div>
@@ -211,37 +359,86 @@ function App() {
       </aside>
 
 
-      {/* MAIN */}
+      {/* =========================
+          MAIN
+      ========================= */}
 
       <main className="main">
 
-        {/* HEADER */}
+
+        {/* =========================
+            HEADER
+        ========================= */}
 
         <header className="top-header">
 
-          <div className="mobile-brand">
+
+          <button
+            className="mobile-menu-button"
+            onClick={() =>
+              setMobileMenu(true)
+            }
+          >
+
+            <Menu size={20} />
+
+          </button>
+
+
+          <div className="mobile-title">
             DailyRoutine
           </div>
 
-          <div className="search">
 
-            <Search size={17} />
+          <div className="search-box">
+
+            <Search size={16} />
 
             <input
+              type="text"
               placeholder="Search habits..."
             />
 
           </div>
 
-          <div className="header-actions">
 
-            <button className="icon-button">
-              <Bell size={19} />
-              <span className="notification"></span>
+          <div className="header-right">
+
+
+            <button className="notification-button">
+
+              <Bell size={17} />
+
+              <span className="notification-dot" />
+
             </button>
 
-            <div className="date">
+
+            <div className="date-text">
+
               Monday, August 24
+
+            </div>
+
+
+            <div className="profile">
+
+              <div className="avatar">
+                B
+              </div>
+
+              <div className="profile-text">
+
+                <strong>
+                  Bhagyalakshmi
+                </strong>
+
+                <span>
+                  Student
+                </span>
+
+              </div>
+
             </div>
 
           </div>
@@ -249,7 +446,12 @@ function App() {
         </header>
 
 
-        {activePage === "Dashboard" && (
+        {/* =========================
+            DASHBOARD
+        ========================= */}
+
+        {activePage ===
+          "Dashboard" && (
 
           <>
 
@@ -257,92 +459,162 @@ function App() {
 
             <section className="hero">
 
-              <div>
+              <div className="hero-content">
 
                 <div className="hero-label">
-                  <span></span>
+
+                  <span />
+
                   CONSISTENCY WINS
+
                 </div>
 
+
                 <h1>
+
                   Build better habits,
+
                   <br />
-                  <span>one day at a time.</span>
+
+                  <span>
+                    one day at a time.
+                  </span>
+
                 </h1>
 
+
                 <p>
-                  Track your habits, build your streak,
-                  and become more consistent every day.
+
+                  Track your habits,
+                  build your streak,
+                  and become more
+                  consistent every day.
+
                 </p>
 
               </div>
 
-              <div className="hero-icon">
-                📈
+
+              <div className="hero-check">
+
+                ✓
+
               </div>
 
             </section>
 
 
-            {/* STATS */}
+            {/* =========================
+                STAT CARDS
+            ========================= */}
 
             <section className="stats">
 
-              <div className="stat">
+              <div className="stat-card">
 
-                <div className="stat-icon green">
-                  <Flame size={21} />
+                <div className="stat-icon">
+
+                  <Flame size={18} />
+
                 </div>
 
                 <div>
-                  <span>Current Streak</span>
-                  <strong>7 Days</strong>
+
+                  <span>
+                    CURRENT STREAK
+                  </span>
+
+                  <strong>
+                    {currentStreak}
+                  </strong>
+
+                  <small>
+                    days
+                  </small>
+
                 </div>
 
               </div>
 
 
-              <div className="stat">
+              <div className="stat-card">
 
-                <div className="stat-icon purple">
-                  <CheckCircle2 size={21} />
+                <div className="stat-icon">
+
+                  <TrendingUp size={18} />
+
                 </div>
 
                 <div>
-                  <span>Completion</span>
+
+                  <span>
+                    COMPLETION
+                  </span>
+
                   <strong>
                     {completionPercentage}%
                   </strong>
+
+                  <small>
+                    this week
+                  </small>
+
                 </div>
 
               </div>
 
 
-              <div className="stat">
+              <div className="stat-card">
 
-                <div className="stat-icon orange">
-                  <Trophy size={21} />
+                <div className="stat-icon">
+
+                  <Trophy size={18} />
+
                 </div>
 
                 <div>
-                  <span>Best Streak</span>
-                  <strong>12 Days</strong>
-                </div>
 
-              </div>
+                  <span>
+                    BEST STREAK
+                  </span>
 
-
-              <div className="stat">
-
-                <div className="stat-icon blue">
-                  <TrendingUp size={21} />
-                </div>
-
-                <div>
-                  <span>This Week</span>
                   <strong>
-                    {totalCompleted} Tasks
+                    {bestStreak}
                   </strong>
+
+                  <small>
+                    days
+                  </small>
+
+                </div>
+
+              </div>
+
+
+              <div className="stat-card">
+
+                <div className="stat-icon">
+
+                  <CheckCircle2 size={18} />
+
+                </div>
+
+                <div>
+
+                  <span>
+                    TODAY
+                  </span>
+
+                  <strong>
+                    {todayCompleted}
+                    /
+                    {habits.length}
+                  </strong>
+
+                  <small>
+                    completed
+                  </small>
+
                 </div>
 
               </div>
@@ -350,139 +622,88 @@ function App() {
             </section>
 
 
-            {/* CHARTS */}
+            {/* =========================
+                ANALYTICS
+            ========================= */}
 
             <section className="analytics-grid">
+
+
+              {/* WEEKLY CHART */}
 
               <div className="panel">
 
                 <div className="panel-header">
 
                   <div>
-                    <h2>Weekly Activity</h2>
-                    <span>Your consistency this week</span>
+
+                    <h2>
+                      Weekly Overview
+                    </h2>
+
+                    <p>
+                      Your habit activity
+                    </p>
+
                   </div>
 
-                  <button className="week-button">
+
+                  <button className="period-button">
+
                     This Week
+
                   </button>
 
                 </div>
 
+
                 <div className="chart">
 
-                  {[
-                    45,
-                    70,
-                    55,
-                    85,
-                    68,
-                    92,
-                    76,
-                  ].map((height, index) => (
+                  {weeklyActivity.map(
+                    (value, index) => {
 
-                    <div
-                      className="chart-column"
-                      key={index}
-                    >
-
-                      <div className="chart-bar-wrapper">
-
-                        <div
-                          className="chart-bar"
-                          style={{
-                            height: `${height}%`,
-                          }}
-                        ></div>
-
-                      </div>
-
-                      <span>
-                        {
-                          [
-                            "Mon",
-                            "Tue",
-                            "Wed",
-                            "Thu",
-                            "Fri",
-                            "Sat",
-                            "Sun",
-                          ][index]
-                        }
-                      </span>
-
-                    </div>
-
-                  ))}
-
-                </div>
-
-              </div>
-
-
-              {/* COMPLETION */}
-
-              <div className="panel">
-
-                <div className="panel-header">
-
-                  <div>
-                    <h2>Habit Progress</h2>
-                    <span>Completion by habit</span>
-                  </div>
-
-                  <BarChart3 size={19} />
-
-                </div>
-
-                <div className="habit-progress">
-
-                  {habits.slice(0, 4).map(
-                    (habit) => {
-
-                      const percentage =
-                        Math.round(
-                          (habit.days.filter(
-                            Boolean
-                          ).length /
-                            7) *
-                            100
-                        );
+                      const height =
+                        (value /
+                          habits.length) *
+                        100;
 
                       return (
 
                         <div
-                          className="progress-item"
-                          key={habit.id}
+                          className="chart-column"
+                          key={index}
                         >
 
-                          <div className="progress-title">
-
-                            <span>
-                              {habit.icon}{" "}
-                              {habit.name}
-                            </span>
-
-                            <strong>
-                              {percentage}%
-                            </strong>
-
-                          </div>
-
-                          <div className="progress-track">
+                          <div className="chart-area">
 
                             <div
-                              className={`progress-value ${habit.color}`}
+                              className="chart-bar"
                               style={{
-                                width: `${percentage}%`,
+                                height:
+                                  `${height}%`,
                               }}
-                            ></div>
+                            />
 
                           </div>
+
+                          <span>
+                            {
+                              [
+                                "Mon",
+                                "Tue",
+                                "Wed",
+                                "Thu",
+                                "Fri",
+                                "Sat",
+                                "Sun",
+                              ][index]
+                            }
+                          </span>
 
                         </div>
 
                       );
+
                     }
                   )}
 
@@ -490,28 +711,122 @@ function App() {
 
               </div>
 
+
+              {/* HABIT PROGRESS */}
+
+              <div className="panel">
+
+                <div className="panel-header">
+
+                  <div>
+
+                    <h2>
+                      Habit Progress
+                    </h2>
+
+                    <p>
+                      Completion by habit
+                    </p>
+
+                  </div>
+
+                  <BarChart3
+                    size={18}
+                  />
+
+                </div>
+
+
+                <div className="progress-list">
+
+                  {habits
+                    .slice(0, 4)
+                    .map(
+                      (habit) => {
+
+                        const percentage =
+                          Math.round(
+                            (habit.days.filter(
+                              Boolean
+                            ).length /
+                              7) *
+                              100
+                          );
+
+                        return (
+
+                          <div
+                            className="progress-item"
+                            key={habit.id}
+                          >
+
+                            <div className="progress-label">
+
+                              <span>
+                                {habit.name}
+                              </span>
+
+                              <strong>
+                                {percentage}%
+                              </strong>
+
+                            </div>
+
+
+                            <div className="progress-track">
+
+                              <div
+                                className="progress-fill"
+                                style={{
+                                  width:
+                                    `${percentage}%`,
+                                }}
+                              />
+
+                            </div>
+
+                          </div>
+
+                        );
+
+                      }
+                    )}
+
+                </div>
+
+              </div>
+
             </section>
 
 
-            {/* HABIT TRACKER */}
+            {/* =========================
+                HABIT TRACKER
+            ========================= */}
 
             <section className="tracker-panel">
+
 
               <div className="tracker-header">
 
                 <div>
 
-                  <h2>Habit Tracker</h2>
+                  <h2>
+                    HABIT TRACKER
+                  </h2>
 
-                  <span>
+                  <p>
                     August 18 – August 24, 2026
-                  </span>
+                  </p>
 
                 </div>
 
-                <button className="add-habit">
-                  <Plus size={17} />
+
+                <button className="add-button">
+
+                  <Plus size={15} />
+
                   Add Habit
+
                 </button>
 
               </div>
@@ -519,30 +834,27 @@ function App() {
 
               <div className="tracker-table">
 
-                <div className="tracker-row tracker-head">
 
-                  <div className="habit-name">
+                <div className="tracker-row tracker-header-row">
+
+                  <div className="habit-column">
                     HABIT
                   </div>
 
-                  {[
-                    "M",
-                    "T",
-                    "W",
-                    "T",
-                    "F",
-                    "S",
-                    "S",
-                  ].map((day, index) => (
 
-                    <div
-                      className="day"
-                      key={index}
-                    >
-                      {day}
-                    </div>
+                  {weekDays.map(
+                    (day, index) => (
 
-                  ))}
+                      <div
+                        className="day-column"
+                        key={index}
+                      >
+                        {day}
+                      </div>
+
+                    )
+                  )}
+
 
                   <div className="streak-column">
                     STREAK
@@ -551,88 +863,116 @@ function App() {
                 </div>
 
 
-                {habits.map((habit) => (
+                {habits.map(
+                  (habit) => {
 
-                  <div
-                    className="tracker-row"
-                    key={habit.id}
-                  >
+                    const Icon =
+                      habit.icon;
 
-                    <div className="habit-name">
+                    const streak =
+                      habit.days.filter(
+                        Boolean
+                      ).length;
 
-                      <span className="habit-emoji">
-                        {habit.icon}
-                      </span>
+                    return (
 
-                      <span>
-                        {habit.name}
-                      </span>
-
-                    </div>
+                      <div
+                        className="tracker-row"
+                        key={habit.id}
+                      >
 
 
-                    {habit.days.map(
-                      (completed, index) => (
+                        <div className="habit-column habit-title">
 
-                        <button
-                          key={index}
-                          className={
-                            completed
-                              ? `habit-check checked ${habit.color}`
-                              : "habit-check"
-                          }
-                          onClick={() =>
-                            toggleHabit(
-                              habit.id,
-                              index
-                            )
-                          }
-                        >
+                          <div className="habit-icon">
 
-                          {completed ? (
-                            <CheckCircle2
-                              size={18}
+                            <Icon
+                              size={15}
                             />
-                          ) : (
-                            <Circle
-                              size={17}
-                            />
-                          )}
 
-                        </button>
+                          </div>
 
-                      )
-                    )}
+                          <span>
+                            {habit.name}
+                          </span>
+
+                        </div>
 
 
-                    <div className="streak-value">
+                        {habit.days.map(
+                          (
+                            completed,
+                            index
+                          ) => (
 
-                      <Flame size={15} />
+                            <button
+                              key={index}
+                              className={`habit-check ${
+                                completed
+                                  ? "checked"
+                                  : ""
+                              }`}
+                              onClick={() =>
+                                toggleHabit(
+                                  habit.id,
+                                  index
+                                )
+                              }
+                            >
 
-                      {
-                        habit.days.filter(
-                          Boolean
-                        ).length
-                      }
+                              {completed ? (
 
-                    </div>
+                                <CheckCircle2
+                                  size={17}
+                                />
 
-                  </div>
+                              ) : (
 
-                ))}
+                                <Circle
+                                  size={16}
+                                />
+
+                              )}
+
+                            </button>
+
+                          )
+                        )}
+
+
+                        <div className="streak-number">
+
+                          <Flame
+                            size={13}
+                          />
+
+                          {streak}
+
+                        </div>
+
+
+                      </div>
+
+                    );
+
+                  }
+                )}
 
               </div>
 
             </section>
 
 
-            {/* BOTTOM */}
+            {/* =========================
+                BOTTOM CARDS
+            ========================= */}
 
             <section className="bottom-grid">
 
+
               <div className="quote-card">
 
-                <div className="quote-icon">
+                <div className="quote-symbol">
                   "
                 </div>
 
@@ -643,8 +983,9 @@ function App() {
                   </h3>
 
                   <p>
-                    You don't need to be perfect.
-                    You just need to keep showing up.
+                    You don't have to be
+                    perfect. Just keep
+                    showing up.
                   </p>
 
                 </div>
@@ -655,30 +996,38 @@ function App() {
               <div className="goal-card">
 
                 <div className="goal-icon">
-                  🎯
+
+                  <Target size={21} />
+
                 </div>
 
                 <div>
 
-                  <span>Weekly Goal</span>
+                  <span>
+                    WEEKLY GOAL
+                  </span>
 
                   <strong>
-                    80% Complete
+                    {completionPercentage}%
+                    Complete
                   </strong>
 
-                  <div className="goal-track">
+
+                  <div className="goal-progress">
 
                     <div
                       style={{
-                        width: `${completionPercentage}%`,
+                        width:
+                          `${completionPercentage}%`,
                       }}
-                    ></div>
+                    />
 
                   </div>
 
                 </div>
 
               </div>
+
 
             </section>
 
@@ -687,30 +1036,51 @@ function App() {
         )}
 
 
-        {activePage !== "Dashboard" && (
+        {/* =========================
+            OTHER PAGES
+        ========================= */}
 
-          <div className="coming-soon">
+        {activePage !==
+          "Dashboard" && (
 
-            <div>
-              {activePage === "Habits" && "🎯"}
+          <section className="empty-page">
 
-              {activePage === "Calendar" && "📅"}
+            <div className="empty-icon">
 
-              {activePage === "Analytics" && "📊"}
+              {activePage ===
+                "Habits" && (
+                <Target />
+              )}
 
-              {activePage === "Settings" && "⚙️"}
+              {activePage ===
+                "Calendar" && (
+                <CalendarDays />
+              )}
+
+              {activePage ===
+                "Analytics" && (
+                <BarChart3 />
+              )}
+
+              {activePage ===
+                "Settings" && (
+                <Settings />
+              )}
+
             </div>
+
 
             <h2>
               {activePage}
             </h2>
 
+
             <p>
-              This section will be connected
-              to the backend next.
+              This section will be
+              connected next.
             </p>
 
-          </div>
+          </section>
 
         )}
 
@@ -719,5 +1089,6 @@ function App() {
     </div>
   );
 }
+
 
 export default App;
